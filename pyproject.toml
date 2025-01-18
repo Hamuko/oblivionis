@@ -1,0 +1,30 @@
+[project]
+name = "oblivionis"
+version = "0.1.0"
+description = "Discord bot for tracking gameplay time"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "audioop-lts; python_version>='3.13'",  # Needed for Discord.py with Python 3.13 for the time being.
+    "discord.py>=2.4,<3",
+    "peewee>=3.17.8,<4",
+    "psycopg2-binary>=2.9.10,<3",
+]
+
+[project.scripts]
+oblivionis = "oblivionis.bot:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff.lint]
+select = [
+    "ARG",
+    "E",
+    "F",
+    "I",
+    "N",
+    "S",
+    "W",
+]
