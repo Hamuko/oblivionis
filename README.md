@@ -20,3 +20,7 @@ services:
       - TOKEN=discord-secret
     restart: on-failure
 ```
+
+## Changelog
+
+0.2.0: Can parse game out of Steam Deck activity
