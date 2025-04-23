@@ -20,3 +20,4 @@ services:
       - TOKEN=discord-secret
     restart: on-failure
 ```
+
