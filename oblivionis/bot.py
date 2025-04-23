@@ -15,6 +15,10 @@ intents.presences = True
 intents.members = True
 bot = commands.Bot(command_prefix=commands.when_mentioned, intents=intents)
 
+def game_from_activity(activity) -> str:
+    if activity.name == "Steam Deck":
+        return activity.details.replace("Playing ", "")
+    return activity.name
 
 @bot.event
 async def on_guild_available(guild):
@@ -34,7 +38,7 @@ async def on_presence_update(before, after):
         logger.info(
             "Member %s has stopped playing %s after %s seconds",
             after,
-            activity.name,
+            game_from_activity(activity),
             duration_seconds,
         )
         user, user_created = storage.User.get_or_create(
@@ -42,12 +46,13 @@ async def on_presence_update(before, after):
         )
         if user_created:
             logger.info("Added new user '%s' to database", before.name)
-        game, game_created = storage.Game.get_or_create(name=activity.name)
+
+        game, game_created = storage.Game.get_or_create(name=game_from_activity(activity))
         if game_created:
             logger.info("Added new game '%s' to database", game.name)
         storage.Activity.create(user=user, game=game, seconds=duration_seconds)
     elif after.activity.type == discord.ActivityType.playing:
-        logger.info("Member %s has started playing %s", after, after.activity.name)
+        logger.info("Member %s has started playing %s", after, game_from_activity(after.activity))
 
 
 @bot.event
