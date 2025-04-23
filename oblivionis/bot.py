@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix=commands.when_mentioned, intents=intents)
 
 def game_from_activity(activity) -> str:
     if activity.name == "Steam Deck":
-        return activity.details.replace("Playing ", "")
+        return activity.details.removeprefix("Playing ")
     return activity.name
 
 @bot.event
