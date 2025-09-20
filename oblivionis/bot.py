@@ -24,6 +24,14 @@ def game_from_activity(activity) -> str:
     return activity.name
 
 
+def get_game_activity(activities):
+    """Get the first game activity or None."""
+    for activity in activities:
+        if activity.type == discord.ActivityType.playing:
+            return activity
+    return None
+
+
 def get_stored_activity(member, activity) -> dict | None:
     """Get an applicable activity from the in-memory storage."""
     stored = activities.pop(member.id, None)
@@ -40,11 +48,14 @@ async def on_guild_available(guild):
 @bot.event
 async def on_presence_update(before, after):
     logger.debug("User presence changed")
-    if after.activity == before.activity:
+    before_activity = get_game_activity(before.activities)
+    after_activity = get_game_activity(after.activities)
+
+    if after_activity == before_activity:
         return
 
-    if after.activity is None and before.activity.type == discord.ActivityType.playing:
-        activity = before.activity
+    if before_activity is not None and after_activity is None:
+        activity = before_activity
 
         # Determine how long the activity lasted.
         start = activity.start
@@ -82,21 +93,21 @@ async def on_presence_update(before, after):
         if game_created:
             logger.info("Added new game '%s' to database", game.name)
         storage.Activity.create(user=user, game=game, seconds=duration_seconds)
-    elif after.activity.type == discord.ActivityType.playing:
+    elif after_activity is not None:
         if (
             after.id not in activities
-            or activities[after.id]["application_id"] != after.activity.application_id
+            or activities[after.id]["application_id"] != after_activity.application_id
         ):
             activities[after.id] = {
-                "application_id": after.activity.application_id,
-                "name": after.activity.name,
-                "start": after.activity.start,
+                "application_id": after_activity.application_id,
+                "name": after_activity.name,
+                "start": after_activity.start,
                 "timestamp": datetime.datetime.now(datetime.UTC),
             }
         logger.info(
             "Member %s has started playing %s",
             after,
-            game_from_activity(after.activity),
+            game_from_activity(after_activity),
         )
 
 
