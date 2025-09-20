@@ -18,6 +18,18 @@ bot = commands.Bot(command_prefix=commands.when_mentioned, intents=intents)
 activities = {}
 
 
+def are_activities_equal(a, b) -> bool:
+    """Check if two given activities are the same."""
+    match a, b:
+        case (None, None):
+            return True
+        case (_, None) | (None, _):
+            return False
+        case (x, y):
+            return x.name == y.name and x.application_id == y.application_id
+    return False
+
+
 def game_from_activity(activity) -> str:
     if activity.name == "Steam Deck":
         return activity.details.removeprefix("Playing ")
@@ -51,7 +63,7 @@ async def on_presence_update(before, after):
     before_activity = get_game_activity(before.activities)
     after_activity = get_game_activity(after.activities)
 
-    if after_activity == before_activity:
+    if are_activities_equal(after_activity, before_activity):
         return
 
     if before_activity is not None and after_activity is None:
