@@ -37,8 +37,11 @@ class Activity(BaseModel):
     user = ForeignKeyField(User)
     game = ForeignKeyField(Game)
     seconds = IntegerField()
+    platform = CharField(default="pc")
 
 
 def connect_db():
     db.connect()
     db.create_tables([User, Game, Activity])
+    # add platform column to activity table if it does not exist
+    db.execute_sql("ALTER TABLE activity ADD COLUMN IF NOT EXISTS platform VARCHAR DEFAULT 'pc'")
