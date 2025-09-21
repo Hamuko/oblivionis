@@ -9,15 +9,26 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Setup Python
+        uses: actions/setup-python@v6
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
   docker:
     runs-on: ubuntu-latest
+    needs: [pre-commit]
     permissions:
       contents: read
       packages: write
     steps:
       - name: Build cache path
         run: echo "CACHE_PATH=${GITHUB_REPOSITORY@L}" >> ${GITHUB_ENV}
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
