@@ -33,7 +33,7 @@ def application_id_from_activity(activity) -> str:
     """Returns application_id if present. Fallsback to name if not."""
     if hasattr(activity, "application_id"):
         return activity.application_id
-    # ps5 games seem to be missing application_id
+    # When playing on PS5, application_id seems to be missing
     logger.warning("Activity %s does not have application_id, using name instead...", activity.name)
     return activity.name
 
@@ -61,10 +61,12 @@ def get_stored_activity(member, activity) -> dict | None:
 def platform_from_activity(activity) -> str:
     """Get the platform from the activity. Fallbacks to pc."""
     if activity.name == "Steam Deck":
+        # Decky Discord Status plugin will sometimes say game name is "Steam Deck", 
+        # and put actual game name in description (see game_from_activity())
         return "steamdeck"
     platform = activity.platform or "pc"
     if platform == "desktop": 
-        # some games say "desktop" apparently
+        # Some games say "desktop", lets just lump it together with "pc"
         platform = "pc"
     return platform
 
