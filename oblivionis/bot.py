@@ -29,6 +29,13 @@ def are_activities_equal(a, b) -> bool:
             return x.name == y.name and x.application_id == y.application_id
     return False
 
+def application_id_from_activity(activity) -> str:
+    """Returns application_id if present. Fallsback to name if not."""
+    if hasattr(activity, "application_id"):
+        return activity.application_id
+    # ps5 games seem to be missing application_id
+    logger.warning("Activity %s does not have application_id, using name instead...", activity.name)
+    return activity.name
 
 def game_from_activity(activity) -> str:
     if activity.name == "Steam Deck":
@@ -47,10 +54,19 @@ def get_game_activity(activities):
 def get_stored_activity(member, activity) -> dict | None:
     """Get an applicable activity from the in-memory storage."""
     stored = activities.pop(member.id, None)
-    if stored and stored["application_id"] == activity.application_id:
+    if stored and stored["application_id"] == application_id_from_activity(activity):
         return stored
     return None
 
+def platform_from_activity(activity) -> str:
+    """Get the platform from the activity. Fallbacks to pc."""
+    if activity.name == "Steam Deck":
+        return "steamdeck"
+    platform = activity.platform or "pc"
+    if platform == "desktop": 
+        # some games say "desktop" apparently
+        platform = "pc"
+    return platform
 
 @bot.event
 async def on_guild_available(guild):
@@ -87,10 +103,14 @@ async def on_presence_update(before, after):
         duration = datetime.datetime.now(datetime.UTC) - start
         duration_seconds = round(duration.total_seconds())
 
+        game_name = game_from_activity(activity)
+        platform_name = platform_from_activity(activity)
+
         logger.info(
-            "Member %s has stopped playing %s after %s seconds",
+            "Member %s has stopped playing %s (%s) after %s seconds",
             after,
-            game_from_activity(activity),
+            game_name,
+            platform_name,
             duration_seconds,
         )
         user, user_created = storage.User.get_or_create(
@@ -100,26 +120,29 @@ async def on_presence_update(before, after):
             logger.info("Added new user '%s' to database", before.name)
 
         game, game_created = storage.Game.get_or_create(
-            name=game_from_activity(activity)
+            name=game_name
         )
         if game_created:
             logger.info("Added new game '%s' to database", game.name)
-        storage.Activity.create(user=user, game=game, seconds=duration_seconds)
+        storage.Activity.create(user=user, game=game, seconds=duration_seconds, platform=platform_name)
     elif after_activity is not None:
+        application_id = application_id_from_activity(after_activity)
         if (
             after.id not in activities
-            or activities[after.id]["application_id"] != after_activity.application_id
+            or activities[after.id]["application_id"] != application_id
         ):
             activities[after.id] = {
-                "application_id": after_activity.application_id,
+                "application_id": application_id,
                 "name": after_activity.name,
                 "start": after_activity.start,
                 "timestamp": datetime.datetime.now(datetime.UTC),
             }
+
         logger.info(
-            "Member %s has started playing %s",
+            "Member %s has started playing %s (%s)",
             after,
             game_from_activity(after_activity),
+            platform_from_activity(after_activity),
         )
 
 

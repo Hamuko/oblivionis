@@ -37,6 +37,7 @@ class Activity(BaseModel):
     user = ForeignKeyField(User)
     game = ForeignKeyField(Game)
     seconds = IntegerField()
+    platform = CharField(default="pc")
 
 
 def connect_db():
