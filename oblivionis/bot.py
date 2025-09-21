@@ -29,13 +29,17 @@ def are_activities_equal(a, b) -> bool:
             return x.name == y.name and x.application_id == y.application_id
     return False
 
+
 def application_id_from_activity(activity) -> str:
     """Returns application_id if present. Fallsback to name if not."""
     if hasattr(activity, "application_id"):
         return activity.application_id
     # When playing on PS5, application_id seems to be missing
-    logger.warning("Activity %s does not have application_id, using name instead...", activity.name)
+    logger.warning(
+        "Activity %s does not have application_id, using name instead...", activity.name
+    )
     return activity.name
+
 
 def game_from_activity(activity) -> str:
     if activity.name == "Steam Deck":
@@ -58,17 +62,19 @@ def get_stored_activity(member, activity) -> dict | None:
         return stored
     return None
 
+
 def platform_from_activity(activity) -> str:
     """Get the platform from the activity. Fallbacks to pc."""
     if activity.name == "Steam Deck":
-        # Decky Discord Status plugin will sometimes say game name is "Steam Deck", 
+        # Decky Discord Status plugin will sometimes say game name is "Steam Deck",
         # and put actual game name in description (see game_from_activity())
         return "steamdeck"
     platform = activity.platform or "pc"
-    if platform == "desktop": 
+    if platform == "desktop":
         # Some games say "desktop", lets just lump it together with "pc"
         platform = "pc"
     return platform
+
 
 @bot.event
 async def on_guild_available(guild):
@@ -121,12 +127,12 @@ async def on_presence_update(before, after):
         if user_created:
             logger.info("Added new user '%s' to database", before.name)
 
-        game, game_created = storage.Game.get_or_create(
-            name=game_name
-        )
+        game, game_created = storage.Game.get_or_create(name=game_name)
         if game_created:
             logger.info("Added new game '%s' to database", game.name)
-        storage.Activity.create(user=user, game=game, seconds=duration_seconds, platform=platform_name)
+        storage.Activity.create(
+            user=user, game=game, seconds=duration_seconds, platform=platform_name
+        )
     elif after_activity is not None:
         application_id = application_id_from_activity(after_activity)
         if (
