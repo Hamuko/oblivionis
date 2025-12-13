@@ -26,10 +26,9 @@ def are_activities_equal(a, b) -> bool:
         case (_, None) | (None, _):
             return False
         case (x, y):
-            same_name = x.name == y.name
-            if hasattr(x, "application_id") and hasattr(y, "application_id"):
-                return same_name and x.application_id == y.application_id
-            return same_name
+            x_app_id = getattr(x, "application_id", None)
+            y_app_id = getattr(y, "application_id", None)
+            return x.name == y.name and x_app_id == y_app_id
     return False
 
 
