@@ -2,6 +2,12 @@
 
 ## [X.X.X] - 202X-XX-XX
 
+## [0.3.1] - 2025-12-13
+
+### Fixed
+
+- Check that activity has `application_id` before attempting to compare 
+
 ## [0.3.0] - 2025-09-21
 
 ### Added
